@@ -1,6 +1,4 @@
-Title: Automated, Distributed File Syncing and Backups Using Syncthing and Rsync
-Date: 18 Oct, 2019
-Keywords: self hosted,raspberrypi,linux,syncthing,rsync,backups,file sync
+# Automated, Distributed File Syncing and Backups Using Syncthing and Rsync
 
 In this guide, you will learn to use [Syncthing](https://syncthing.net/) for local, distributed file syncing across multiple devices, along with [Rsync](https://en.wikipedia.org/wiki/Rsync) (for macOS, Linux) and Windows' native backup utility for regularly backing up your important data.
 
@@ -12,25 +10,6 @@ For example, if you are syncing your phone's "Camera photos" folder to your desk
 
 Therefore, backups are essential.
 
-**Table of Contents**
-<!-- TOC -->
-
-- [Distributed File Sync with Syncthing](#distributed-file-sync-with-syncthing)
-    - [Download and install Syncthing for your OS:](#download-and-install-syncthing-for-your-os)
-    - [Example Setup: Sharing a Music Folder Between an Android Phone and a Desktop/Laptop PC](#example-setup-sharing-a-music-folder-between-an-android-phone-and-a-desktoplaptop-pc)
-    - [Sample Folder Structure](#sample-folder-structure)
-- [Backups](#backups)
-    - [Backups on Windows](#backups-on-windows)
-        - [Using the GUI](#using-the-gui)
-        - [Using the Command Line with Robocopy](#using-the-command-line-with-robocopy)
-            - [Simplifying the Process](#simplifying-the-process)
-    - [Backups on macOS and Linux with Rsync](#backups-on-macos-and-linux-with-rsync)
-        - [Pre-Setup](#pre-setup)
-        - [Taking Backups](#taking-backups)
-        - [Creating a Backup Script](#creating-a-backup-script)
-- [Further Reading](#further-reading)
-
-<!-- /TOC -->
 
 ## Distributed File Sync with Syncthing
 

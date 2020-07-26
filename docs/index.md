@@ -1,5 +1,4 @@
-Title: Welcome to the Self-host Wiki
-Keywords: self hosted,raspberrypi,linux,wiki
+# Welcome to The Self-host Wiki
 
 ## What
 
@@ -49,9 +48,9 @@ completely to Linux.
 Here is a tentative list of topics that will be covered at first. The
 list wil grow bigger in scope as time goes on:
 
--   [Simple File Server Using SMB and NGINX](fileserver.html) \[RPi/Debian/WSL\]
--   [Automated, Distributed Local Backups Using Syncthing and Rsync](sync_backup.html)
+-   [Simple File Server Using SMB and NGINX](guides/fileserver.md) \[RPi/Debian/WSL\]
+-   [Automated, Distributed Local Backups Using Syncthing and Rsync](guides/sync_backup.md)
     \[RPi/Debian/Windows/Android\]
--   [Simple Torrent Box Using Transmission-daemon](torrentbox.html) \[RPi/Debian/Ubuntu\]
+-   [Simple Torrent Box Using Transmission-daemon](guides/torrentbox.md) \[RPi/Debian/Ubuntu\]
 -   Mobile Torrent Box Using LibreTorrent \[Android\]
 -   ...more to come

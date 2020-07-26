@@ -1,34 +1,15 @@
-Title: Simple Torrent Box Using Transmission-daemon
-Date: 6 Nov, 2019
-Keywords: self hosted,raspberrypi,linux,transmission,file server,media server,bittorrent
+# Simple Torrent Box Using Transmission-daemon
 
 In this article, you will learn how to make a *Torrent Box* - a computer dedicated to downloading and seeding torrent files. Ideally, this will be a low-powered computer that stays on most or all of the time, such as an [Intel NUC](https://en.wikipedia.org/wiki/Next_Unit_of_Computing) or a Raspberry Pi. However, you can use practically any computer for this purpose.
 
-By the end of this guide, you will have a torrent box that you can control (add/remove torrents, limit bandwidth etc) and copy files or stream media from any device on your local network. For the file sharing and streaming to work, it is recommended to follow and set up file-sharing using the [Simple File / Media Server guide](fileserver.html) beforehand.
-
-**Table of Contents:**
-
-<!-- TOC -->
-
-- [Prerequisites and Assumptions](#prerequisites-and-assumptions)
-- [Installing Transmission Daemon](#installing-transmission-daemon)
-- [Creating the Downloads Folder](#creating-the-downloads-folder)
-- [Configuring Transmission](#configuring-transmission)
-    - [Optional:  Watching a Directory for Torrents](#optional--watching-a-directory-for-torrents)
-    - [Final Steps](#final-steps)
-- [Accessing the Web Interface](#accessing-the-web-interface)
-    - [Mobile and Desktop Apps](#mobile-and-desktop-apps)
-- [Final Thoughts and Further Reading](#final-thoughts-and-further-reading)
-
-<!-- /TOC -->
-
+By the end of this guide, you will have a torrent box that you can control (add/remove torrents, limit bandwidth etc) and copy files or stream media from any device on your local network. For the file sharing and streaming to work, it is recommended to follow and set up file-sharing using the [Simple File / Media Server guide](fileserver.md) beforehand.
 
 ## Prerequisites and Assumptions
 - A computer running a recent version of Debian, Raspbian or Ubuntu.
 - A way to connect said computer to the local network and the internet (Wifi/Ethernet).
 - Plenty of disk space to store your downloaded files in.
 
-This guide assumes that you have read and set up file sharing on this computer as described in the [Simple File / Media Server guide](fileserver.html). If you don't, the torrenting part will still work, but you will not be able to access the downloaded files over the network. You can skip that guide if you have another way to transfer the downloaded files to your other devices.
+This guide assumes that you have read and set up file sharing on this computer as described in the [Simple File / Media Server guide](fileserver.md). If you don't, the torrenting part will still work, but you will not be able to access the downloaded files over the network. You can skip that guide if you have another way to transfer the downloaded files to your other devices.
 
 For the sake of consistency, it is assumed that this is being set up on a Raspberry Pi running Raspbian, with the username `pi`.
 
@@ -45,7 +26,7 @@ Before we configure anything, it is important to know that whenever you make any
 
 ## Creating the Downloads Folder
 
-Before we begin the configuration, we will create a folder for Transmission to save downloaded files in. If you have been following the [Simple File / Media Server guide](fileserver.html), you will already have a folder called `/share` that is owned by your user. Now create a folder called `/share/torrents` owned by the (automatically created) `debian-transmission` user and group. Despite what the name suggests, this user is created even if you are using Ubuntu.
+Before we begin the configuration, we will create a folder for Transmission to save downloaded files in. If you have been following the [Simple File / Media Server guide](fileserver.md), you will already have a folder called `/share` that is owned by your user. Now create a folder called `/share/torrents` owned by the (automatically created) `debian-transmission` user and group. Despite what the name suggests, this user is created even if you are using Ubuntu.
 
     sudo mkdir -p /share/torrents
     sudo chown debian-transmission:debian-transmission /share/torrents
@@ -136,7 +117,7 @@ This is all you need to know for basic usage of the Transmission daemon and web 
 - [Transmission Wiki on GitHub](https://github.com/transmission/transmission/wiki)
 - [Configuration File Reference on Transmission Wiki](https://github.com/transmission/transmission/wiki/Editing-Configuration-Files)
 - [Ubuntu Wiki Article](https://help.ubuntu.com/community/TransmissionHowTo) (slightly outdated, but still contains useful information)
-- [Simple File / Media Server Guide](fileserver.html) - The guide that this tutorial is based on. Contains useful information on how to share files and stream media across your local network.
+- [Simple File / Media Server Guide](fileserver.md) - The guide that this tutorial is based on. Contains useful information on how to share files and stream media across your local network.
 - [Distributed File Syncing and Backups Guide](sync_backup.html) - A useful resource if you want to automatically sync your downloaded files to your devices rather than accessing them through the server.
 
     Tip: If you are going to use Syncthing to sync the downloaded files, change `"incomplete-dir-enabled": false,` to `"incomplete-dir-enabled": true,` and choose a folder outside of `/share` in the `"incomplete-dir":` parameter in `settings.json`. This is to ensure that Syncthing only syncs the completed files in `/share/torrents` rather than inefficiently transferring incomplete torrent downloads.

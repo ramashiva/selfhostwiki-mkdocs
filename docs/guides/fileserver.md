@@ -1,6 +1,4 @@
-Title: Simple File / Media Server Using SMB and NGINX
-Date: 5 Oct, 2019
-Keywords: file server,media server,smb,samba,nginx,self hosted,raspberrypi,linux
+# Simple File / Media Server Using SMB and NGINX
 
 We will create a simple file server on a GNU/Linux installation. The aim
 is to have a bare-bones server that provides read-write access using the
@@ -8,28 +6,6 @@ SMB protocol (the technology that Microsoft uses for its network shares)
 and (optionally) read-only access over HTTP, so that any device on the
 network can fetch files or stream media while only needing a web
 browser.
-
-**Table of Contents**
-
-<!-- TOC -->
-
-- [Prerequisites](#prerequisites)
-- [Samba](#samba)
-    - [Creating the Media folder](#creating-the-media-folder)
-    - [Installation](#installation)
-    - [Configuration](#configuration)
-    - [Creating a Samba user](#creating-a-samba-user)
-    - [Applying Changes and Enabling the SMBD Service](#applying-changes-and-enabling-the-smbd-service)
-    - [Accessing the Server](#accessing-the-server)
-        - [Finding Out the Server Address](#finding-out-the-server-address)
-        - [Using Windows](#using-windows)
-        - [Using macOS](#using-macos)
-- [Optional: Enabling Web/http Access Using NGINX](#optional-enabling-webhttp-access-using-nginx)
-    - [Installation and Configuration](#installation-and-configuration)
-        - [Serving the "/share" Directory](#serving-the-share-directory)
-        - [Optional: Making Things Prettier](#optional-making-things-prettier)
-
-<!-- /TOC -->
 
 ## Prerequisites
 
