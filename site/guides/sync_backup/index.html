@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        
+        
+        <link rel="shortcut icon" href="../../img/favicon.ico">
+        <title>Automated, Distributed File Syncing and Backups Using Syncthing and Rsync - Self-host Wiki</title>
+        <link href="../../css/bootstrap-custom.min.css" rel="stylesheet">
+        <link href="../../css/font-awesome.min.css" rel="stylesheet">
+        <link href="../../css/base.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">
+
+        <script src="../../js/jquery-1.10.2.min.js" defer></script>
+        <script src="../../js/bootstrap-3.0.3.min.js" defer></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+        <script>hljs.initHighlightingOnLoad();</script> 
+    </head>
+
+    <body>
+
+        <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+            <div class="container">
+
+                <!-- Collapsed navigation -->
+                <div class="navbar-header">
+                    <!-- Expander button -->
+                    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                    <a class="navbar-brand" href="../..">Self-host Wiki</a>
+                </div>
+
+                <!-- Expanded navigation -->
+                <div class="navbar-collapse collapse">
+                        <!-- Main navigation -->
+                        <ul class="nav navbar-nav">
+                            <li >
+                                <a href="../..">Welcome to the Self-host Wiki</a>
+                            </li>
+                            <li class="dropdown active">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown">Guides <b class="caret"></b></a>
+                                <ul class="dropdown-menu">
+                                    
+<li >
+    <a href="../fileserver/">Simple File / Media Server Using SMB and NGINX</a>
+</li>
+                                    
+<li >
+    <a href="../readme/">The Git repo for the [Self-host Wiki](https://escargot.tech/selfhost/) (formerly selfhostwiki.neocities.org)</a>
+</li>
+                                    
+<li >
+    <a href="../robocopy/">File Syncing and Backups on Windows With Robocopy</a>
+</li>
+                                    
+<li class="active">
+    <a href="./">Automated, Distributed File Syncing and Backups Using Syncthing and Rsync</a>
+</li>
+                                    
+<li >
+    <a href="../torrentbox/">Simple Torrent Box Using Transmission-daemon</a>
+</li>
+                                </ul>
+                            </li>
+                        </ul>
+
+                    <ul class="nav navbar-nav navbar-right">
+                        <li>
+                            <a href="#" data-toggle="modal" data-target="#mkdocs_search_modal">
+                                <i class="fa fa-search"></i> Search
+                            </a>
+                        </li>
+                            <li >
+                                <a rel="next" href="../robocopy/">
+                                    <i class="fa fa-arrow-left"></i> Previous
+                                </a>
+                            </li>
+                            <li >
+                                <a rel="prev" href="../torrentbox/">
+                                    Next <i class="fa fa-arrow-right"></i>
+                                </a>
+                            </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+                <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
+    <ul class="nav bs-sidenav">
+        <li class="main active"><a href="#distributed-file-sync-with-syncthing">Distributed File Sync with Syncthing</a></li>
+            <li><a href="#download-and-install-syncthing-for-your-os">Download and install Syncthing for your OS:</a></li>
+            <li><a href="#example-setup-sharing-a-music-folder-between-an-android-phone-and-a-desktoplaptop-pc">Example Setup: Sharing a Music Folder Between an Android Phone and a Desktop/Laptop PC</a></li>
+            <li><a href="#sample-folder-structure">Sample Folder Structure</a></li>
+        <li class="main "><a href="#backups">Backups</a></li>
+            <li><a href="#backups-on-windows">Backups on Windows</a></li>
+            <li><a href="#backups-on-macos-and-linux-with-rsync">Backups on macOS and Linux with Rsync</a></li>
+        <li class="main "><a href="#further-reading">Further Reading</a></li>
+    </ul>
+</div></div>
+                <div class="col-md-9" role="main">
+
+<p>In this guide, you will learn to use <a href="https://syncthing.net/">Syncthing</a> for local, distributed file syncing across multiple devices, along with <a href="https://en.wikipedia.org/wiki/Rsync">Rsync</a> (for macOS, Linux) and Windows' native backup utility for regularly backing up your important data.</p>
+<p>The first goal is to have your important, frequently accessed data, such as music, camera photos etc. synced and available on all/most of your devices such as smartphones, laptops and desktops.</p>
+<p>The second goal is to keep this synced, distributed data regularly backed up to an external storage device such as a pen/thumb drive or an external hard disk. This is important because while you do have your data in multiple places simultaneously, <a href="https://docs.syncthing.net/users/faq.html#is-syncthing-my-ideal-backup-application"><strong>Syncthing is not a backup solution</strong></a>.</p>
+<p>For example, if you are syncing your phone's "Camera photos" folder to your desktop, and some/all of the photos on the phone are accidentally deleted (or corrupted) while Syncthing is running on both the devices, it will notice the changes and happily delete the synced copies of those photos on your desktop as well.</p>
+<p>Therefore, backups are essential.</p>
+<p><strong>Table of Contents</strong>
+<!-- TOC --></p>
+<ul>
+<li><a href="#distributed-file-sync-with-syncthing">Distributed File Sync with Syncthing</a><ul>
+<li><a href="#download-and-install-syncthing-for-your-os">Download and install Syncthing for your OS:</a></li>
+<li><a href="#example-setup-sharing-a-music-folder-between-an-android-phone-and-a-desktoplaptop-pc">Example Setup: Sharing a Music Folder Between an Android Phone and a Desktop/Laptop PC</a></li>
+<li><a href="#sample-folder-structure">Sample Folder Structure</a></li>
+</ul>
+</li>
+<li><a href="#backups">Backups</a><ul>
+<li><a href="#backups-on-windows">Backups on Windows</a><ul>
+<li><a href="#using-the-gui">Using the GUI</a></li>
+<li><a href="#using-the-command-line-with-robocopy">Using the Command Line with Robocopy</a><ul>
+<li><a href="#simplifying-the-process">Simplifying the Process</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#backups-on-macos-and-linux-with-rsync">Backups on macOS and Linux with Rsync</a><ul>
+<li><a href="#pre-setup">Pre-Setup</a></li>
+<li><a href="#taking-backups">Taking Backups</a></li>
+<li><a href="#creating-a-backup-script">Creating a Backup Script</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#further-reading">Further Reading</a></li>
+</ul>
+<!-- /TOC -->
+
+<h2 id="distributed-file-sync-with-syncthing">Distributed File Sync with Syncthing</h2>
+<h3 id="download-and-install-syncthing-for-your-os">Download and install Syncthing for your OS:</h3>
+<ul>
+<li><a href="https://play.google.com/store/apps/details?id=com.nutomic.syncthingandroid">Android (Google play)</a>, or alternatively, <a href="https://f-droid.org/packages/com.nutomic.syncthingandroid/">F-Droid</a></li>
+<li><a href="https://github.com/canton7/SyncTrayzor/releases/latest">Windows</a></li>
+<li><a href="https://github.com/syncthing/syncthing-macos/releases/latest">macOS</a></li>
+<li>Linux / BSD - use the version provided by your distribution (possibly old/outdated), or see the <a href="https://docs.syncthing.net/users/contrib.html#packages-and-bundlings">Packages and Bundlings</a> document on the Syncthing website.</li>
+</ul>
+<p>Install Syncthing on two or more of the devices that you want to sync folders on.</p>
+<h3 id="example-setup-sharing-a-music-folder-between-an-android-phone-and-a-desktoplaptop-pc">Example Setup: Sharing a Music Folder Between an Android Phone and a Desktop/Laptop PC</h3>
+<p>As a demonstration, you will learn to set up a folder called "DesktopMusic" in your user's Home directory on a desktop to sync with a folder called "SyncedMusic" on an Android device. Once you can set this up, adding more folders and/or devices will be relatively straightforward.</p>
+<ol>
+<li>On your desktop, create a folder called <code>DesktopMusic</code> in your user's Home directory.</li>
+<li>On your Android smartphone, using a file manager of your choice, create a folder called <code>SyncedMusic</code>.</li>
+<li>Run Syncthing on your desktop and open the Syncthing app on your smartphone. Make sure both the devices are connected to the same network.</li>
+<li>
+<p>On your desktop, you will see a screen like the following:
+<img alt="syncthing main screen" src="../img/syncthing_main_screen.png" /></p>
+<p>Click on the "<strong>+ Add Folder</strong>" button on the left side of the screen.
+1. In the dialog box that pops up, go to the "<strong>Folder Path</strong>" section and enter <code>~\DesktopMusic</code> if you are on Windows, or <code>~/DesktopMusic</code> on Linux/macOS. The <code>~</code> character automatically translates to your current user's Home directory.</p>
+<p><strong>Note for Linux/macOS users</strong>: Keep in mind that these systems are <em>case-sensitive</em> - document1.txt is NOT the same as Document1.txt.
+<img alt="syncthing add folder" src="../img/syncthing_add_folder.png" /></p>
+<p>As in the screenshot, give this folder an appropriate "Folder Label" and click "✅<strong>Save</strong>"</p>
+</li>
+<li>
+<p>On the bottom right of the main screen, you will see a button called "**+Add Remote Device". Click it. Make sure Syncthing is open on your smartphone. You will see a popup like the following:
+<img alt="syncthing add device" src="../img/syncthing_add_device-general.png" /></p>
+<p>The highlighted link is the device ID of your smartphone. Click on it to add it. Optionally, give the device a name in the "<strong>Device Name</strong>" section.
+1. In the same dialog box, click on the "<strong>Sharing</strong>" tab on the top and make sure the <code>DesktopMusic</code> folder that we created is selected. Click "✅<strong>Save</strong>" once you are done. 
+<img alt="syncthing add device" src="../img/syncthing_add_device-general.png" /></p>
+</li>
+<li>
+<p>Soon, you will see a notification on your smartphone that says "Device XYZ wants to connect". Click on "<strong>Accept</strong>". After accepting, you will soon see another notification saying "Device XYZ wants to share folder 'DesktopMusic'". Click "<strong>Accept</strong>" again. You will see a screen similar to this:
+<img alt="syncthing accept folder" src="../img/syncthing_accept_folder.png" /></p>
+</li>
+<li>
+<p>Tap on the part where it says "<strong>Directory</strong>", and navigate to the <code>SyncedMusic</code> folder that you created earlier in point 2 and select it. Once done, tap on the ✅ tick button on the top right. If the <code>DesktopMusic</code> folder on your desktop has any files in it, they will sync with the smartphone.
+<img alt="syncthing folder added" src="../img/syncthing_folder_added.png" /></p>
+</li>
+</ol>
+<p>That is all you need to know for basic file syncing with Syncthing. You can follow the same procedure to add more devices and folders to your setup. Ideally, you will keep the Syncthing service running perpetually on your desktop and run it on your mobile devices as and when necessary (Syncthing can be a battery hog).</p>
+<p>For further reading and more advanced configurations, refer to the excellent <a href="https://docs.syncthing.net/">Syncthing documentation</a>. Of special interest are the concepts of <a href="https://docs.syncthing.net/users/foldertypes.html#send-only-folder">Send-only folder</a> (for devices where "master copies" are kept) and <a href="https://docs.syncthing.net/users/foldertypes.html#receive-only-folder">Receive-only folder</a>.</p>
+<h3 id="sample-folder-structure">Sample Folder Structure</h3>
+<p>In a sample household with one desktop, one smartphone and one laptop, you can try to use a structure like this on your desktop:</p>
+<pre><code>HOME/
+├ Music      # Synced in Send-only mode with smartphone and laptop
+└ MobileStuff     # Parent folder for files synced from your smartphone
+  ├ CameraPhotos   # Synced in Receive-only mode with smartphone
+  ├ WhatsAppMedia  # Your phone's `/storage/Whatsapp/Media` folder,
+                    # contains images,videos etc. shared on WhatsApp.
+  └ Similarly, any other folders in your phone that you'd like to sync.
+</code></pre>
+<p>The advantage of a structure like this is that once your desktop or laptop has finished syncing with your smartphone, it is very easy to make backups of everything important, which we will learn in the next section.</p>
+<h2 id="backups">Backups</h2>
+<p>It is recommended to keep a copy of your important files on at least <strong>two</strong> external drives. One of them will be your daily backup drive - you insert it in your desktop or laptop once a day and make a backup. It will save your skin in case your computer's hard disk dies or if you accidentally delete your synced folders.</p>
+<p>The other drive is your weekly/monthly backup - you do the same thing as the first one on it once per week/month, and then store it in a different location than your first backup drive. This will save your skin in case your first backup drive either fails or your baby throws it across the room.</p>
+<h3 id="backups-on-windows">Backups on Windows</h3>
+<h4 id="using-the-gui">Using the GUI</h4>
+<p>Backing up your personal files in Windows is relatively straightforward using the built-in <a href="https://support.microsoft.com/en-us/help/4027408/windows-10-backup-and-restore">Backup and Restore</a> functionality.</p>
+<p>Insert your to-be backup drive in your computer, search for "<strong>Backup Settings</strong>" in the start menu, and use the GUI to configure which folders to back up, how often and to which drive. Do the same with your other backup drive, and you are done.</p>
+<h4 id="using-the-command-line-with-robocopy">Using the Command Line with Robocopy</h4>
+<p>Another way to do backups on Windows if you need finer control of your backups and prefer using the command line is using the built-in Robocopy tool. While it is recommended to read the <a href="/robocopy.html">dedicated tutorial</a> to get a good grasp of Robocopy, we will nevertheless see how to use it to back up your files to an external hard disk.</p>
+<p>For the purpose of this tutorial, we will assume you have a directory structure as mentioned in the <a href="#sample-folder-structure">Sample Folder Structure</a> section above, and want to back up the <code>Music</code> and <code>MobileStuff</code> folders in your home directory.</p>
+<p>We are also assuming that your external drive is mounted as <code>H:\</code>. You will need to verify it on your system and change the drive letter accordingly. It is recommended to use a dedicated backup folder in your drive. In our case, we will use <code>H:\backups</code>.</p>
+<p>Robocopy commands are structured like:</p>
+<pre><code>robocopy &lt;source&gt; &lt;destination&gt; [&lt;options&gt;]
+</code></pre>
+<p>To sync the <code>MobileStuff</code> folder, open a PowerShell window, and enter the following command:</p>
+<pre><code>robocopy ~\MobileStuff H:\backups\MobileStuff /s
+</code></pre>
+<p>Here is an explanation of what is going on:</p>
+<ul>
+<li><code>~</code> is shortcut for your user's Home directory - <code>C:\Users\yourUsername</code> by default. Therefore, <code>~\MobileStuff</code> automatically translates to <code>C:\Users\yourUsername\MobileStuff</code></li>
+<li>The <code>/s</code> option tells Robocopy to copy <strong>s</strong>ubdirectories when available.</li>
+</ul>
+<p>Similarly, we can do the same for <code>Music</code> or any other folder:</p>
+<pre><code>robocopy ~\Music H:\backups\Music /s
+</code></pre>
+<h5 id="simplifying-the-process">Simplifying the Process</h5>
+<p>If you have several folders that you wish to back up regularly, entering the above command for every folder will get tedious. To solve this problem, you can write a PowerShell <code>function</code>. Open a new PowerShell window, and enter the following command:</p>
+<pre><code>notepad.exe $PROFILE
+</code></pre>
+<p>In the Notepad window that opens, add the following code and save the file:</p>
+<pre><code>function backupMyFiles
+{
+    robocopy C:\Users\yourUsername\MobileStuff H:\backups\MobileStuff /s
+    robocopy C:\Users\yourUsername\Music H:\backups\Music /s
+}
+</code></pre>
+<p>In this code:
+* <code>backupMyFiles</code> is the name of the function that you just created.
+* The two commands between the curly braces are the commands that will run whenever you run <code>backupMyFiles</code> in a PowerShell window.
+* Change <code>yourUsername</code> to whatever your actual username is.</p>
+<p>Once you save the file, close and reopen PowerShell, running the command <code>backupMyFiles</code> will automatically backup the folders mentioned in the file. You can add whichever commands you like to this function, or change the name of the function to whatever you prefer. This takes out the tediousness and repetition involved in running the same set of commands for every folder that you want to back up.</p>
+<h3 id="backups-on-macos-and-linux-with-rsync">Backups on macOS and Linux with Rsync</h3>
+<blockquote>
+<p><strong>Note</strong>: If you are using macOS, it is recommended to use the excellent, intuitive <a href="https://support.apple.com/en-us/HT201250">Time Machine</a> utility to manage your backups and call it a day. However, if you are hardcore and wish to control every single aspect of your backups (or if you just prefer the command line), then continue reading.</p>
+</blockquote>
+<p><a href="https://en.wikipedia.org/wiki/Rsync">Rsync</a> is a command-line utility for synchronizing files and folders between disks and (optionally) across the network. It comes preinstalled on macOS and most Linux distributions, so there is no need to install additional software.</p>
+<p>These instructions assume you have set up your folders according to the [sample folder structure]. If not, make sure to substitute accordingly. Again, pay attention to the <em>case</em> when working on the command line - <code>document1.txt</code> is NOT the same as <code>Document1.txt</code>.</p>
+<h4 id="pre-setup">Pre-Setup</h4>
+<blockquote>
+<p><strong>Note for Linux users</strong>: Different Linux distributions and flavors have different ways to mount external drives and use different directories as mount points. Please refer to your distribution's documentation to know where external disks are mounted. Other than this detail, the rest of the documentation applies equally to macOS and Linux.</p>
+</blockquote>
+<p>Insert your external hard disk and open Finder. Make a note of what the drive is called. In my case, it is called <code>Transcend</code>:</p>
+<p><img alt="external disk in finder" src="../img/finder_external_disk.png" /></p>
+<p>Navigate to the disk and create a folder called <code>backups</code>. This will be the folder in which you will back up your data.</p>
+<p>Your external disk is mounted in a folder called <code>/Volumes</code>. To locate it, open Terminal, type in the command <code>ls /Volumes</code> and press Enter/Return. You will see an output like the following:</p>
+<pre><code>$ ls /Volumes
+Macintosh HD    Preboot     Transcend
+</code></pre>
+<p>As noted earlier, my external disk is called <code>Transcend</code>. Therefore, we infer from this command that it is mounted under <code>/Volumes/Transcend</code>. Make a note of this path. Again, case matters.</p>
+<p>Use the <code>mkdir</code> (make directory) command to create a <code>backups</code> directory in the external drive:</p>
+<pre><code>mkdir /Volumes/Transcend/backups
+</code></pre>
+<h4 id="taking-backups">Taking Backups</h4>
+<p>Rsync commands are structured like:</p>
+<pre><code>rsync [&lt;options&gt;] &lt;source&gt; &lt;destination&gt;
+</code></pre>
+<p>As a sample backup plan, here is how to back up the <code>MobileStuff</code> directory:</p>
+<pre><code>rsync -avu --progress --modify-window=1 ~/MobileStuff /Volumes/Transcend/backups
+</code></pre>
+<p>Here is an explanation of what is going on in the above command:</p>
+<ul>
+<li>The <code>-avu</code> option has three parts:<ul>
+<li>The <code>a</code> option tells Rsync to sync in "archive" mode.</li>
+<li>The <code>v</code> option increases verbosity and gives more details on what is going on during the transfer.</li>
+<li><code>u</code> tells Rsync to skip any files that already exist on the destination during subsequent backups. However, if the file has been modified at the source, the destination file will be replaced with the newer version.</li>
+</ul>
+</li>
+<li><code>--progress</code> shows progress during transfer.</li>
+<li><code>~</code> stands for your user's Home directory. <code>/Users/&lt;your username&gt;</code> on macOS, and <code>/home/&lt;your username&gt;</code> on Linux.</li>
+<li><code>/Volumes/Transcend/backups</code> is the directory that the files will be synced to. The "Transcend" part will probably be different on your system. Substitute accordingly.</li>
+<li><code>--modify-window=1</code> is a special parameter that you need to pass if you are syncing from a macOS/Linux system to an external drive formatted in Microsoft's <a href="https://en.wikipedia.org/wiki/File_Allocation_Table">FAT filesystem family</a>. Most flash drives are formatted in this filesystem by default. If you are certain that your external drive does not use this filesystem, you can omit this parameter. If you are not certain, leave it in.</li>
+</ul>
+<p>This will create a folder called <code>MobileStuff</code> in the destination folder <code>/Volumes/Transcend/backups</code> and sync it with the source folder. Any time you modify or add files to the source folder and rerun the above command, it will sync all the latest changes.</p>
+<p>Similarly, you can sync other directories:</p>
+<pre><code>rsync -avu --progress --modify-window=1 ~/Music /Volumes/Transcend/backups
+</code></pre>
+<h4 id="creating-a-backup-script">Creating a Backup Script</h4>
+<p>Instead of running the (rather lengthy) Rsync command(s) every time you want to do a backup, you can instead create a <em>script</em> to simplify the process. In a Terminal window, create a directory called <code>bin</code>:</p>
+<pre><code>mkdir ~/bin
+</code></pre>
+<p>In the newly created folder, using a text editor of your choice, create a file called <code>backup.sh</code> and add all the commands that you want to run. For example:</p>
+<pre><code>rsync -avu --progress --modify-window=1 ~/MobileStuff /Volumes/Transcend/backups
+rsync -avu --progress --modify-window=1 ~/Music /Volumes/Transcend/backups
+rsync -avu --progress --modify-window=1 ~/Documents/SuperImportantDocs /Volumes/Transcend/backups
+</code></pre>
+<p>Save the file and make it executable using the <a href="https://en.wikipedia.org/wiki/Chmod"><code>chmod</code></a> command:</p>
+<pre><code>chmod +x ~/bin/backup.sh
+</code></pre>
+<p>Add the <code>~/bin</code> directory to your PATH by editing your <code>.bash_profile</code> using your preferred text editor. For example:</p>
+<pre><code>nano ~/.bash_profile
+</code></pre>
+<p>Append the following line to this file and save it:</p>
+<pre><code>export PATH=$PATH:$HOME/bin
+</code></pre>
+<p>Close the terminal window and open a new one. Now, any time you run <code>backup.sh</code> in a Terminal, it will run all the commands you just saved, one after the other.</p>
+<h2 id="further-reading">Further Reading</h2>
+<ul>
+<li><a href="https://docs.syncthing.net/">Syncthing Documentation</a></li>
+<li><a href="https://docs.microsoft.com/en-us/windows-server/administration/windows-commands/robocopy">Robocopy on Microsoft Docs</a></li>
+<li><a href="https://download.samba.org/pub/rsync/rsync.html">Rsync Manual Page</a></li>
+</ul></div>
+        </div>
+
+        <footer class="col-md-12">
+            <hr>
+            <p>Documentation built with <a href="https://www.mkdocs.org/">MkDocs</a>.</p>
+        </footer>
+        <script>
+            var base_url = "../..",
+                shortcuts = {"help": 191, "next": 78, "previous": 80, "search": 83};
+        </script>
+        <script src="../../js/base.js" defer></script>
+        <script src="../../search/main.js" defer></script>
+
+        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="Search Modal" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title" id="exampleModalLabel">Search</h4>
+            </div>
+            <div class="modal-body">
+                <p>
+                    From here you can search these documents. Enter
+                    your search terms below.
+                </p>
+                <form role="form">
+                    <div class="form-group">
+                        <input type="text" class="form-control" placeholder="Search..." id="mkdocs-search-query" title="Type search term here">
+                    </div>
+                </form>
+                <div id="mkdocs-search-results"></div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div><div class="modal" id="mkdocs_keyboard_modal" tabindex="-1" role="dialog" aria-labelledby="Keyboard Shortcuts Modal" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title" id="exampleModalLabel">Keyboard Shortcuts</h4>
+            </div>
+            <div class="modal-body">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th style="width: 20%;">Keys</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="help shortcut"><kbd>?</kbd></td>
+                    <td>Open this help</td>
+                  </tr>
+                  <tr>
+                    <td class="next shortcut"><kbd>n</kbd></td>
+                    <td>Next page</td>
+                  </tr>
+                  <tr>
+                    <td class="prev shortcut"><kbd>p</kbd></td>
+                    <td>Previous page</td>
+                  </tr>
+                  <tr>
+                    <td class="search shortcut"><kbd>s</kbd></td>
+                    <td>Search</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+
+    </body>
+</html>

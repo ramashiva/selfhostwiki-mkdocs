@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        
+        
+        <link rel="shortcut icon" href="../../img/favicon.ico">
+        <title>Simple File / Media Server Using SMB and NGINX - Self-host Wiki</title>
+        <link href="../../css/bootstrap-custom.min.css" rel="stylesheet">
+        <link href="../../css/font-awesome.min.css" rel="stylesheet">
+        <link href="../../css/base.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">
+
+        <script src="../../js/jquery-1.10.2.min.js" defer></script>
+        <script src="../../js/bootstrap-3.0.3.min.js" defer></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+        <script>hljs.initHighlightingOnLoad();</script> 
+    </head>
+
+    <body>
+
+        <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+            <div class="container">
+
+                <!-- Collapsed navigation -->
+                <div class="navbar-header">
+                    <!-- Expander button -->
+                    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                    <a class="navbar-brand" href="../..">Self-host Wiki</a>
+                </div>
+
+                <!-- Expanded navigation -->
+                <div class="navbar-collapse collapse">
+                        <!-- Main navigation -->
+                        <ul class="nav navbar-nav">
+                            <li >
+                                <a href="../..">Welcome to the Self-host Wiki</a>
+                            </li>
+                            <li class="dropdown active">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown">Guides <b class="caret"></b></a>
+                                <ul class="dropdown-menu">
+                                    
+<li class="active">
+    <a href="./">Simple File / Media Server Using SMB and NGINX</a>
+</li>
+                                    
+<li >
+    <a href="../readme/">The Git repo for the [Self-host Wiki](https://escargot.tech/selfhost/) (formerly selfhostwiki.neocities.org)</a>
+</li>
+                                    
+<li >
+    <a href="../robocopy/">File Syncing and Backups on Windows With Robocopy</a>
+</li>
+                                    
+<li >
+    <a href="../sync_backup/">Automated, Distributed File Syncing and Backups Using Syncthing and Rsync</a>
+</li>
+                                    
+<li >
+    <a href="../torrentbox/">Simple Torrent Box Using Transmission-daemon</a>
+</li>
+                                </ul>
+                            </li>
+                        </ul>
+
+                    <ul class="nav navbar-nav navbar-right">
+                        <li>
+                            <a href="#" data-toggle="modal" data-target="#mkdocs_search_modal">
+                                <i class="fa fa-search"></i> Search
+                            </a>
+                        </li>
+                            <li >
+                                <a rel="next" href="../..">
+                                    <i class="fa fa-arrow-left"></i> Previous
+                                </a>
+                            </li>
+                            <li >
+                                <a rel="prev" href="../readme/">
+                                    Next <i class="fa fa-arrow-right"></i>
+                                </a>
+                            </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+                <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
+    <ul class="nav bs-sidenav">
+        <li class="main active"><a href="#prerequisites">Prerequisites</a></li>
+        <li class="main "><a href="#samba">Samba</a></li>
+            <li><a href="#creating-the-media-folder">Creating the Media folder</a></li>
+            <li><a href="#installation">Installation</a></li>
+            <li><a href="#configuration">Configuration</a></li>
+            <li><a href="#creating-a-samba-user">Creating a Samba user</a></li>
+            <li><a href="#applying-changes-and-enabling-the-smbd-service">Applying Changes and Enabling the SMBD Service</a></li>
+            <li><a href="#accessing-the-server">Accessing the Server</a></li>
+        <li class="main "><a href="#optional-enabling-webhttp-access-using-nginx">Optional: Enabling Web/http Access Using NGINX</a></li>
+            <li><a href="#installation-and-configuration">Installation and Configuration</a></li>
+    </ul>
+</div></div>
+                <div class="col-md-9" role="main">
+
+<p>We will create a simple file server on a GNU/Linux installation. The aim
+is to have a bare-bones server that provides read-write access using the
+SMB protocol (the technology that Microsoft uses for its network shares)
+and (optionally) read-only access over HTTP, so that any device on the
+network can fetch files or stream media while only needing a web
+browser.</p>
+<p><strong>Table of Contents</strong></p>
+<!-- TOC -->
+
+<ul>
+<li><a href="#prerequisites">Prerequisites</a></li>
+<li><a href="#samba">Samba</a><ul>
+<li><a href="#creating-the-media-folder">Creating the Media folder</a></li>
+<li><a href="#installation">Installation</a></li>
+<li><a href="#configuration">Configuration</a></li>
+<li><a href="#creating-a-samba-user">Creating a Samba user</a></li>
+<li><a href="#applying-changes-and-enabling-the-smbd-service">Applying Changes and Enabling the SMBD Service</a></li>
+<li><a href="#accessing-the-server">Accessing the Server</a><ul>
+<li><a href="#finding-out-the-server-address">Finding Out the Server Address</a></li>
+<li><a href="#using-windows">Using Windows</a></li>
+<li><a href="#using-macos">Using macOS</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#optional-enabling-webhttp-access-using-nginx">Optional: Enabling Web/http Access Using NGINX</a><ul>
+<li><a href="#installation-and-configuration">Installation and Configuration</a><ul>
+<li><a href="#serving-the-share-directory">Serving the "/share" Directory</a></li>
+<li><a href="#optional-making-things-prettier">Optional: Making Things Prettier</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<!-- /TOC -->
+
+<h2 id="prerequisites">Prerequisites</h2>
+<ul>
+<li>A computer running Debian or a derivative distribution such as
+    Ubuntu or Raspbian (Raspberry Pi).</li>
+<li>A way to connect said computer to the local network (WiFi/Ethernet).</li>
+<li>Ample disk space to store your files.</li>
+</ul>
+<h2 id="samba">Samba</h2>
+<p>We will use <a href="https://en.wikipedia.org/wiki/Samba_(software)">Samba</a> to provide file-sharing services to our devices. Before installing it, we will set up our folders.</p>
+<h3 id="creating-the-media-folder">Creating the Media folder</h3>
+<p>First, create a new folder to serve as your media directory:</p>
+<pre><code>sudo mkdir /share
+sudo chown username:username /share
+</code></pre>
+<p>In the second command, replace <code>username</code> with the username
+you want to use on your system. If your username is <code>mark</code>, use
+<code>mark:mark</code>. On Raspbian, you will probably want to use <code>pi:pi</code>.</p>
+<h3 id="installation">Installation</h3>
+<p>To begin, update your Apt repositories:</p>
+<pre><code>sudo apt update
+</code></pre>
+<p>Then, install <code>Samba</code> using:</p>
+<pre><code>sudo apt install samba samba-common-bin
+</code></pre>
+<h3 id="configuration">Configuration</h3>
+<p>Once installed, configure Samba to serve your files. To
+do this, edit Samba's configuration file using your preferred editor:</p>
+<pre><code>sudo nano /etc/samba/smb.conf
+</code></pre>
+<p>Add the following to this file:</p>
+<pre><code>[share]
+path = /share
+writeable=Yes
+public=no
+create mask=0777
+directory mask=0777
+</code></pre>
+<p>Here, <code>[share]</code> refers to the name of the Samba share you created. This
+share will be accessible from other machines on the address
+<code>\\HOSTNAME\share</code>, where <code>HOSTNAME</code> is the actual hostname of your
+server.</p>
+<p><code>path</code> defines the location of the shared directory on the filesystem.
+Here, it refers to the directory you created earlier.</p>
+<p><code>writable</code> decides whether the folder is modifiable when accessed using
+Samba.</p>
+<p><code>public</code> is set to <strong>no</strong>, which means that a
+username and password will be required to access the share. If you wish to
+enable anonymous, passwordless login, change it to <strong>yes</strong>.</p>
+<p>Save the file. You are now ready to create a username and password for
+accessing the share. Note that if you set up a public share using
+<code>public=yes</code> in this step, you can skip the following section.</p>
+<h3 id="creating-a-samba-user">Creating a Samba user</h3>
+<p>To create a username and password for accessing your share, use the
+<code>smbpasswd</code> command. Replace <code>username</code> with the name that you wish to use:</p>
+<pre><code>sudo smbpasswd -a username
+</code></pre>
+<p>After pressing <strong>Enter</strong>, you will be prompted to set a password for this user.</p>
+<h3 id="applying-changes-and-enabling-the-smbd-service">Applying Changes and Enabling the SMBD Service</h3>
+<p>To apply your changes, first restart the <code>smbd</code> (Samba) service:</p>
+<pre><code>sudo systemctl restart smbd
+</code></pre>
+<p>To make the service start up every time at boot, you need to <em>enable</em> it:</p>
+<pre><code>sudo systemctl enable smbd
+</code></pre>
+<h3 id="accessing-the-server">Accessing the Server</h3>
+<p>To access the server using Samba, you need either the server's local IP
+address, or the hostname. If you know what those are for your server,
+you can jump to the <a href="#using-windows">Using Windows</a> or <a href="#using-macos">Using macOS</a> sections.</p>
+<h4 id="finding-out-the-server-address">Finding Out the Server Address</h4>
+<p>Most modern routers let you access a device on the network using the
+scheme <code>hostname.local</code>, where "hostname" is to be replaced by your
+server's actual hostname. Usually, all you need to do to find that out
+is to run the <code>hostname</code> command on the server:</p>
+<pre><code>hostname
+</code></pre>
+<p>In my case, the output is "raspberrypi", since I'm using a
+Raspberry Pi as the test device. I can ideally access my share using the
+address <code>raspberrypi.local</code>.</p>
+<p>If the above method does not work on your network, you will need the
+local IP address of your server. Again, use the <code>hostname</code>
+command, but with the <code>-I</code> flag, like so:</p>
+<pre><code>hostname -I
+</code></pre>
+<p>You will get an address like <code>192.168.1.15</code> or <code>10.0.0.6</code>. Note it down.</p>
+<h4 id="using-windows">Using Windows</h4>
+<p>Open up Windows Explorer. In the address bar, type in
+<code>\\hostname.local\share</code>, replacing "hostname" with your server's
+hostname (or <code>\\IP address\share</code> if that does not work). You will be
+prompted to enter a username and password to access the share. Use the
+credentials you set when creating the Samba user in the <a href="#creating-a-samba-user">Creating a Samba user</a> section.</p>
+<h4 id="using-macos">Using macOS</h4>
+<p>Open Finder. In the toolbar on the top, select
+<code>Go-&gt;Connect to Server...</code>. In the address bar, type in
+<code>smb://hostname.local/share</code>, replacing "hostname" with your server's
+hostname (or <code>smb://IP address/share</code> if that does not work). You will
+be prompted to enter a username and password to access the share. Use
+the credentials you set when creating the Samba user in the <a href="#creating-a-samba-user">Creating a Samba user</a> section.
+You can choose to save the credentials and add this folder to your
+Favorites for easier access in the future.</p>
+<p>You are now all set to use your new file/media server as you please. Of
+course, you can also access your server using your Android devices (look
+for a file manager that supports the SMB/Samba protocol). iOS devices
+can also access it using the built-in Files app.</p>
+<p>That is it for the file server guide if all you need is SMB access. If you
+would prefer to access your server using a web browser, keep reading.</p>
+<h2 id="optional-enabling-webhttp-access-using-nginx">Optional: Enabling Web/http Access Using NGINX</h2>
+<p>To enable web access, you will need a web server. In this guide, we will use NGINX because it is relatively lightweight and simple to configure.</p>
+<h3 id="installation-and-configuration">Installation and Configuration</h3>
+<p>To install NGINX, run:</p>
+<pre><code>sudo apt install nginx-full
+</code></pre>
+<p>To configure the server, first make sure that NGINX's "Fancy indexes" setting is enabled:</p>
+<pre><code>file /etc/nginx/modules-enabled/50-mod-http-fancyindex.conf
+</code></pre>
+<p>If you get an output like <code>cannot open ...50-mod-http-fancyindex.conf (No such file or directory)</code>, enable the fancy indexes module by running:</p>
+<pre><code>sudo ln -s /usr/share/nginx/modules-available/mod-http-fancyindex.conf /etc/nginx/modules-enabled/50-mod-http-fancyindex.conf
+</code></pre>
+<h4 id="serving-the-share-directory">Serving the "/share" Directory</h4>
+<p>The config file for the default NGINX vhost is <code>/etc/nginx/sites-enabled/default</code>, which in turn is a symlink to <code>/etc/nginx/sites-available/default</code>.</p>
+<pre><code>sudo nano /etc/nginx/sites-available/default
+</code></pre>
+<p>For our setup, replace its contents with the following:</p>
+<pre><code>server {
+    # The default port to listen on
+    listen 80 default_server;
+    listen [::]:80 default_server;
+
+    # Change root directory to our file server's root
+    root /share;
+
+    index index.html index.htm;
+
+    server_name _;
+
+    location / {
+        # First attempt to serve request as file, then
+        # as directory, then fall back to displaying a 404.
+        try_files $uri $uri/ =404;
+
+        #Fancy index settings:
+        fancyindex on;              # Enable fancy indexes.
+        fancyindex_name_length 255; # Maximum length of a filename
+        fancyindex_localtime   on;
+        fancyindex_exact_size off;  # Output human-readable file sizes.
+    }
+}
+</code></pre>
+<p>Modify the <code>root</code> parameter according to your requirements if you chose a different directory for your file server.</p>
+<p>Now, start and enable the NGINX service:</p>
+<pre><code>sudo systemctl restart nginx
+sudo systemctl enable nginx
+</code></pre>
+<p>If everything went well, you can now access your server with any web browser at <code>http://hostname.local</code> - replacing "hostname" with your server's actual hostname or local IP address.</p>
+<p><img alt="fileserver_default" src="../img/fileserver_default.png" title="Default fancyindexes" /></p>
+<h4 id="optional-making-things-prettier">Optional: Making Things Prettier</h4>
+<p>If the above image looks rather... <em>dull</em> to you, that's because it is (it would've looked worse had we not enabled Fancy indexes). Fortunately, there are plenty of themes available for a prettier, more usable directory listing. For this guide, we will use one called <a href="https://github.com/alehaa/nginx-fancyindex-flat-theme">Flat theme</a>.</p>
+<p>Download the theme to your home directory using:</p>
+<pre><code>cd ~
+wget https://github.com/alehaa/nginx-fancyindex-flat-theme/releases/download/v1.0/nginx-fancyindex-flat-theme.tar.gz
+</code></pre>
+<p>Once the download is complete, unpack the tar archive:</p>
+<pre><code>tar xvf ./nginx-fancyindex-flat-theme.tar.gz
+</code></pre>
+<p>You will now have a directory called <code>flat-theme</code> in your home folder. Move this to your server's root:</p>
+<pre><code>mv ./flat-theme /share/theme
+</code></pre>
+<p>Next, modify the <code>/etc/nginx/sites-available/default</code> file:</p>
+<pre><code>sudo nano /etc/nginx/sites-available/default
+</code></pre>
+<p>Scroll down to the <code>location / {</code> section in the file, and change it to this:</p>
+<pre><code>    location / {
+        # First attempt to serve request as file, then
+        # as directory, then fall back to displaying a 404.
+        try_files $uri $uri/ =404;
+
+        #Fancy index settings
+        fancyindex on;              # Enable fancy indexes.
+        fancyindex_name_length 255;
+        fancyindex_localtime   on;
+        fancyindex_exact_size off;  # Output human-readable file sizes.
+
+        # Settings for the theme:
+        fancyindex_header      "/theme/header.html";
+        fancyindex_footer      "/theme/footer.html";
+        fancyindex_show_path   off;
+
+        # Make sure the "theme" folder is not displayed:
+        fancyindex_ignore "theme";
+    }
+</code></pre>
+<p>Finally, save the file and reload NGINX settings:</p>
+<pre><code>sudo systemctl reload nginx
+</code></pre>
+<p>Refresh the page on your browser, and you will see a much better looking, more usable file index:</p>
+<p><img alt="fileserver-flat-theme" src="../img/fileserver_flat_theme.png" title="Prettier fancyindexes" /></p></div>
+        </div>
+
+        <footer class="col-md-12">
+            <hr>
+            <p>Documentation built with <a href="https://www.mkdocs.org/">MkDocs</a>.</p>
+        </footer>
+        <script>
+            var base_url = "../..",
+                shortcuts = {"help": 191, "next": 78, "previous": 80, "search": 83};
+        </script>
+        <script src="../../js/base.js" defer></script>
+        <script src="../../search/main.js" defer></script>
+
+        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="Search Modal" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title" id="exampleModalLabel">Search</h4>
+            </div>
+            <div class="modal-body">
+                <p>
+                    From here you can search these documents. Enter
+                    your search terms below.
+                </p>
+                <form role="form">
+                    <div class="form-group">
+                        <input type="text" class="form-control" placeholder="Search..." id="mkdocs-search-query" title="Type search term here">
+                    </div>
+                </form>
+                <div id="mkdocs-search-results"></div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div><div class="modal" id="mkdocs_keyboard_modal" tabindex="-1" role="dialog" aria-labelledby="Keyboard Shortcuts Modal" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title" id="exampleModalLabel">Keyboard Shortcuts</h4>
+            </div>
+            <div class="modal-body">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th style="width: 20%;">Keys</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="help shortcut"><kbd>?</kbd></td>
+                    <td>Open this help</td>
+                  </tr>
+                  <tr>
+                    <td class="next shortcut"><kbd>n</kbd></td>
+                    <td>Next page</td>
+                  </tr>
+                  <tr>
+                    <td class="prev shortcut"><kbd>p</kbd></td>
+                    <td>Previous page</td>
+                  </tr>
+                  <tr>
+                    <td class="search shortcut"><kbd>s</kbd></td>
+                    <td>Search</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+
+    </body>
+</html>
